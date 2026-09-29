@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>중2 과학: 순환계 개념 복습 워크북 (태블릿 최적화)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            touch-action: manipulation;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        body {
+            background-color: #f1f5f9;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+        
+        /* Custom scrollbar for tablet smooth touch */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 9999px;
+        }
+
+        /* Pulse heartbeat animation */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.05); }
+            28% { transform: scale(0.98); }
+            42% { transform: scale(1.03); }
+            70% { transform: scale(1); }
+        }
+        .animate-heartbeat {
+            animation: heartbeat 1.5s infinite ease-in-out;
+            transform-origin: center;
+        }
+
+        /* Selected drag item state */
+        .item-selected {
+            ring: 4px;
+            ring-color: #3b82f6;
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        @keyframes sparkle-glow {
+            0% {
+                filter: drop-shadow(0 0 6px #facc15) brightness(1.2);
+                opacity: 0.85;
+            }
+            50% {
+                filter: drop-shadow(0 0 25px #fde047) drop-shadow(0 0 45px #ffffff) brightness(2.2);
+                opacity: 1;
+            }
+            100% {
+                filter: drop-shadow(0 0 6px #facc15) brightness(1.2);
+                opacity: 0.85;
+            }
+        }
+        .animate-sparkle {
+            animation: sparkle-glow 0.4s infinite alternate ease-in-out !important;
+        }
+
+        @keyframes valve-sparkle {
+            0% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 6px #fde047);
+            }
+            50% {
+                transform: scale(1.45);
+                filter: drop-shadow(0 0 25px #fde047) drop-shadow(0 0 50px #ffffff);
+            }
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 6px #fde047);
+            }
+        }
+        .animate-valve-sparkle {
+            animation: valve-sparkle 0.4s infinite alternate ease-in-out !important;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-100 antialiased min-h-screen">
+
+    <div id="app" class="min-h-screen flex flex-col justify-between max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-4">
+
+        <!-- Top Header Navigation bar (Optimized for Tablet view) -->
+        <header class="bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 text-white rounded-2xl shadow-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                
+                <div class="flex items-center space-x-3">
+                    <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-md text-2xl sm:text-3xl shadow-inner">
+                        🫀
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-lg sm:text-2xl font-black tracking-tight">중2 과학: 순환계 복습 마스터!</h1>
+                            <span class="bg-yellow-300 text-slate-900 text-[11px] sm:text-xs font-black px-2 py-0.5 rounded-full">태블릿 전용</span>
+                        </div>
+                        <p class="text-xs text-rose-100 font-semibold">동물과 에너지 - 빈칸 채우기 & 드래그 앤 드롭 개념 정복</p>
+                    </div>
+                </div>
+
+                <!-- Right Side Audio & Score Dashboard -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <button @click="toggleSound" class="bg-white/15 hover:bg-white/25 text-xs px-3 py-2 rounded-xl backdrop-blur transition flex items-center gap-1.5 border border-white/20 font-bold">
+                        <i :class="soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark'"></i>
+                        <span class="hidden sm:inline">{{ soundEnabled ? '소리 켜짐' : '음소거' }}</span>
+                    </button>
+
+                    <div class="bg-black/25 px-3 py-1.5 rounded-xl border border-white/20 flex items-center gap-2 text-xs sm:text-sm font-extrabold">
+                        <span class="text-amber-300">총 복습 달성도:</span>
+                        <span class="text-white text-base">{{ Math.round(overallProgress) }}%</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Navigation Tabs for Tablet -->
+            <div class="mt-3 flex space-x-2 overflow-x-auto no-scrollbar">
+                <button 
+                    v-for="tab in tabs" 
+                    :key="tab.id"
+                    @click="activeTab = tab.id; playSound('click')"
+                    :class="[
+                        'flex items-center gap-2 px-4 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition duration-200 whitespace-nowrap shadow-sm',
+                        activeTab === tab.id 
+                            ? 'bg-white text-rose-600 shadow-md transform scale-[1.02]' 
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                    ]">
+                    <i :class="tab.icon"></i>
+                    <span>{{ tab.name }}</span>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full font-black"
+                          :class="getTabProgress(tab.id) === 100 ? 'bg-emerald-400 text-slate-900' : 'bg-white/30 text-white'">
+                        {{ getTabProgress(tab.id) }}%
+                    </span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Teacher Guide Tip Banner -->
+        <div class="mb-4 bg-amber-50 border-2 border-amber-300 p-3 sm:p-4 rounded-2xl shadow-sm flex items-center gap-3">
+            <div class="text-2xl sm:text-3xl shrink-0 bg-amber-200 p-2 rounded-xl">👩‍🔬</div>
+            <div class="flex-grow">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-amber-900 text-xs sm:text-sm">선생님의 복습 가이드</span>
+                    <span class="bg-amber-200 text-amber-900 text-[10px] px-2 py-0.5 rounded font-black">터치 & 드래그 복습</span>
+                </div>
+                <p class="text-xs sm:text-sm text-amber-800 font-medium mt-0.5">
+                    {{ teacherTips[activeTab] }}
+                </p>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA FOR TABLET SCREEN -->
+        <main class="flex-grow">
+
+            <!-- ================= TAB 1: 혈액 복습 (BLOOD) ================= -->
+            <section v-if="activeTab === 'blood'" class="space-y-4">
+                
+                <!-- INTERACTIVE VISUAL OBSERVATION DIAGRAM QUIZ: Centrifuge Tube & Blood Cell Diagram -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                            <span class="bg-rose-100 text-rose-700 p-1 rounded-lg">🔬 관찰자료 복습</span>
+                            혈액 원심분리 층 구조 & 혈구 세포 관찰 명칭 맞추기 (실제 크기 비율 반영)
+                        </h3>
+                        <button @click="checkBloodObs" class="text-xs bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg font-bold transition">
+                            관찰 정답 확인
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        
+                        <!-- 1. Centrifuged Blood Test Tube Diagram with Selectable Blanks -->
+                        <div class="md:col-span-5 flex items-center justify-center gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="relative w-16 h-40 flex justify-center shrink-0">
+                                <!-- Test Tube SVG -->
+                                <svg class="w-full h-full" viewBox="0 0 60 160">
+                                    <path d="M 15 10 L 45 10 L 45 135 C 45 148 38 155 30 155 C 22 155 15 148 15 135 Z" fill="#f8fafc" stroke="#64748b" stroke-width="3" />
+                                    <!-- Plasma Layer (Top ~55%) -->
+                                    <path d="M 17 35 L 43 35 L 43 90 L 17 90 Z" fill="#fef08a" opacity="0.9" />
+                                    <!-- Buffy Coat Layer (Middle ~1%) -->
+                                    <rect x="17" y="90" width="26" height="4" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5" />
+                                    <!-- Red Blood Cell Layer (Bottom ~45%) -->
+                                    <path d="M 17 94 L 43 94 L 43 135 C 43 145 37 152 30 152 C 23 152 17 145 17 135 Z" fill="#b91c1c" />
+                                    <!-- Tube Top Cap -->
+                                    <rect x="10" y="5" width="40" height="8" rx="2" fill="#ef4444" />
+                                </svg>
+                            </div>
+                            
+                            <div class="space-y-2 text-[11px] font-bold w-full">
+                                <div class="bg-amber-50 border border-amber-300 p-2 rounded-lg flex flex-col gap-1">
+                                    <span class="text-amber-900 font-extrabold">상층 (액체 성분 약 55%):</span>
+                                    <select v-model="bloodObsUser.layerTop" class="w-full border border-amber-400 rounded px-1.5 py-1 text-xs font-bold text-amber-950 bg-white">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="혈장">혈장</option>
+                                        <option value="적혈구">적혈구</option>
+                                        <option value="백혈구">백혈구</option>
+                                    </select>
+                                </div>
+                                <div class="bg-slate-100 border border-slate-300 p-2 rounded-lg flex flex-col gap-1">
+                                    <span class="text-slate-800 font-extrabold">중간층 (얇은 흰색층):</span>
+                                    <select v-model="bloodObsUser.layerMid" class="w-full border border-slate-400 rounded px-1.5 py-1 text-xs font-bold text-slate-900 bg-white">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="혈장">혈장만 존재</option>
+                                        <option value="백혈구와 혈소판">백혈구와 혈소판</option>
+                                        <option value="적혈구만 존재">적혈구만 존재</option>
+                                    </select>
+                                </div>
+                                <div class="bg-rose-50 border border-rose-300 p-2 rounded-lg flex flex-col gap-1">
+                                    <span class="text-rose-900 font-extrabold">하층 (침전 성분 약 45%):</span>
+                                    <select v-model="bloodObsUser.layerBot" class="w-full border border-rose-400 rounded px-1.5 py-1 text-xs font-bold text-rose-950 bg-white">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="혈장">혈장</option>
+                                        <option value="적혈구">적혈구</option>
+                                        <option value="혈소판">혈소판</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Blood Cell Structural Microscope Diagrams with REAL PROPORTION SIZES -->
+                        <div class="md:col-span-7 grid grid-cols-3 gap-2 items-end">
+                            <!-- RBC Illustration (Medium Size ~ 7-8 um) -->
+                            <div class="bg-white p-2 rounded-xl border border-rose-200 text-center flex flex-col items-center h-full justify-between shadow-sm">
+                                <div class="flex-grow flex items-center justify-center py-2">
+                                    <svg class="w-12 h-12" viewBox="0 0 60 60">
+                                        <ellipse cx="30" cy="30" rx="24" ry="19" fill="#dc2626" stroke="#991b1b" stroke-width="2" />
+                                        <ellipse cx="30" cy="30" rx="13" ry="9" fill="#f87171" opacity="0.6" />
+                                    </svg>
+                                </div>
+                                <span class="font-extrabold text-xs text-rose-900 mb-1">세포 A (중간 크기)</span>
+                                <select v-model="bloodObsUser.cellA" class="w-full border border-rose-300 rounded p-1 text-[11px] font-bold text-slate-800 bg-white">
+                                    <option value="">[ 선택 ]</option>
+                                    <option value="적혈구">적혈구</option>
+                                    <option value="백혈구">백혈구</option>
+                                    <option value="혈소판">혈소판</option>
+                                </select>
+                                <span class="text-[10px] text-slate-500 font-medium mt-1">원반형 / 약 7~8㎛ / 핵 없음</span>
+                            </div>
+
+                            <!-- WBC Illustration (Largest Size ~ 12-15 um) -->
+                            <div class="bg-white p-2 rounded-xl border border-slate-300 text-center flex flex-col items-center h-full justify-between shadow-sm">
+                                <div class="flex-grow flex items-center justify-center py-2">
+                                    <svg class="w-20 h-20" viewBox="0 0 80 80">
+                                        <path d="M 40 8 C 62 8, 72 25, 68 48 C 64 68, 44 74, 24 68 C 10 60, 12 36, 24 18 C 30 12, 35 8, 40 8 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5" />
+                                        <!-- Purple Nucleus -->
+                                        <path d="M 30 28 C 38 22, 52 28, 48 42 C 44 54, 32 52, 28 40 Z" fill="#7e22ce" opacity="0.85" />
+                                    </svg>
+                                </div>
+                                <span class="font-extrabold text-xs text-slate-800 mb-1">세포 B (가장 큼)</span>
+                                <select v-model="bloodObsUser.cellB" class="w-full border border-slate-300 rounded p-1 text-[11px] font-bold text-slate-800 bg-white">
+                                    <option value="">[ 선택 ]</option>
+                                    <option value="적혈구">적혈구</option>
+                                    <option value="백혈구">백혈구</option>
+                                    <option value="혈소판">혈소판</option>
+                                </select>
+                                <span class="text-[10px] text-slate-500 font-medium mt-1">불규칙형 / 약 12~15㎛ / 큰 핵</span>
+                            </div>
+
+                            <!-- Platelet Illustration (Smallest Fragment Size ~ 2-3 um) -->
+                            <div class="bg-white p-2 rounded-xl border border-purple-200 text-center flex flex-col items-center h-full justify-between shadow-sm">
+                                <div class="flex-grow flex items-center justify-center py-2">
+                                    <svg class="w-7 h-7" viewBox="0 0 40 40">
+                                        <polygon points="12,8 24,5 34,14 30,28 18,34 8,22" fill="#c084fc" stroke="#7e22ce" stroke-width="2" />
+                                        <polygon points="14,12 20,10 25,16 22,23 16,25" fill="#a855f7" />
+                                    </svg>
+                                </div>
+                                <span class="font-extrabold text-xs text-purple-900 mb-1">세포 C (가장 작음)</span>
+                                <select v-model="bloodObsUser.cellC" class="w-full border border-purple-300 rounded p-1 text-[11px] font-bold text-slate-800 bg-white">
+                                    <option value="">[ 선택 ]</option>
+                                    <option value="적혈구">적혈구</option>
+                                    <option value="백혈구">백혈구</option>
+                                    <option value="혈소판">혈소판</option>
+                                </select>
+                                <span class="text-[10px] text-slate-500 font-medium mt-1">조각 형태 / 약 2~3㎛ / 핵 없음</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Observation feedback score -->
+                    <div v-if="bloodObsChecked" class="mt-2 p-2.5 rounded-xl border text-xs flex items-center justify-between"
+                         :class="bloodObsScore === 100 ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'">
+                        <span class="font-bold">
+                            {{ bloodObsScore === 100 ? '🎉 정확합니다! 혈액 관찰자료 해석 완료!' : '💡 관찰 자료 답안을 확인하세요.' }}
+                        </span>
+                        <span class="font-black text-xs sm:text-sm">{{ bloodObsScore }}점</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    
+                    <!-- Activity 1: Drag & Drop Blood Components -->
+                    <div class="lg:col-span-7 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-3 border-b pb-2">
+                            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                <span class="bg-rose-100 text-rose-600 p-1.5 rounded-lg text-xs">활동 1</span>
+                                🩸 혈액 구성 성분의 핵심 특징 매칭 (개념 판단)
+                            </h2>
+                            <button @click="resetBloodDrag" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold">
+                                <i class="fa-solid fa-rotate-right mr-1"></i>초기화
+                            </button>
+                        </div>
+
+                        <!-- Draggable / Selectable Card Pool -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4">
+                            <p class="text-xs font-bold text-slate-600 mb-2">👇 아래 특성 문장 카드를 읽고 올바른 성분 상자로 끌어다 놓으세요!</p>
+                            <div class="flex flex-wrap gap-2 min-h-[50px] items-center">
+                                <div 
+                                    v-for="item in bloodDragItems" 
+                                    :key="item.id"
+                                    v-show="!item.placed"
+                                    draggable="true"
+                                    @dragstart="onDragStart($event, item)"
+                                    @click="selectItemForMobile(item)"
+                                    :class="[
+                                        'px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition shadow-sm border flex items-center gap-1.5',
+                                        selectedMobileItem?.id === item.id 
+                                            ? 'bg-blue-600 text-white ring-4 ring-blue-300 scale-105' 
+                                            : 'bg-white text-slate-800 border-slate-300 hover:border-rose-400'
+                                    ]">
+                                    <span>{{ item.text }}</span>
+                                </div>
+                                <div v-if="allBloodItemsPlaced" class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-check text-base"></i> 모든 특성 카드를 올바르게 배치했습니다!
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4 Drop Target Bins -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div 
+                                v-for="(bin, key) in bloodBins" 
+                                :key="key"
+                                @dragover.prevent
+                                @drop="onDrop($event, key)"
+                                @click="placeSelectedItemInBin(key)"
+                                class="bg-slate-50 border-2 border-dashed p-3 rounded-xl transition duration-150 min-h-[120px] flex flex-col justify-between"
+                                :class="[
+                                    selectedMobileItem ? 'border-sky-400 bg-sky-50/50 cursor-pointer' : 'border-slate-300',
+                                    isBinCorrect(key) ? 'border-emerald-400 bg-emerald-50/40' : ''
+                                ]">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1.5">
+                                        <span class="font-extrabold text-xs sm:text-sm text-slate-800">
+                                            {{ bin.title }}
+                                        </span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded font-black" :class="bin.badgeClass">
+                                            {{ bin.subtitle }}
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500 mb-2">{{ bin.hint }}</p>
+                                </div>
+
+                                <!-- Placed items inside bin -->
+                                <div class="flex flex-wrap gap-1.5 min-h-[36px] bg-white/80 p-2 rounded-lg border border-slate-200">
+                                    <div 
+                                        v-for="placedId in bin.items" 
+                                        :key="placedId"
+                                        class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1">
+                                        <span>{{ getBloodItem(placedId).text }}</span>
+                                        <button @click.stop="removeItemFromBin(placedId, key)" class="ml-1 text-emerald-600 hover:text-red-500">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                    <span v-if="bin.items.length === 0" class="text-[11px] text-slate-400 italic font-medium">
+                                        여기에 터치하거나 드래그하세요
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Activity 2: Fill-in-the-blanks for Blood -->
+                    <div class="lg:col-span-5 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3 border-b pb-2">
+                                <h2 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                    <span class="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">활동 2</span>
+                                    📝 혈액 핵심 개념 빈칸 채우기
+                                </h2>
+                                <button @click="checkBloodBlanks" class="text-xs bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-lg font-bold transition">
+                                    채점하기
+                                </button>
+                            </div>
+
+                            <p class="text-xs text-slate-600 mb-4">
+                                문장의 <span class="bg-amber-100 px-1.5 py-0.5 rounded font-bold text-amber-900">빈칸</span>을 선택해 올바른 정답 단어로 채워보세요!
+                            </p>
+
+                            <div class="space-y-3 text-xs sm:text-sm leading-relaxed text-slate-800 bg-amber-50/50 p-4 rounded-xl border border-amber-200">
+                                
+                                <p>
+                                    1. 혈액의 액체 성분인 
+                                    <select v-model="bloodUserBlanks.b1" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="혈장">혈장</option>
+                                        <option value="적혈구">적혈구</option>
+                                        <option value="혈소판">혈소판</option>
+                                    </select>
+                                    은 영양소와 노폐물을 운반합니다.
+                                </p>
+
+                                <p>
+                                    2. 가운데가 오목한 원반 모양으로 
+                                    <select v-model="bloodUserBlanks.b2" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="핵 있음">핵 있음</option>
+                                        <option value="핵 없음">핵 없음</option>
+                                    </select>
+                                     상태인 
+                                    <select v-model="bloodUserBlanks.b3" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="적혈구">적혈구</option>
+                                        <option value="백혈구">백혈구</option>
+                                    </select>
+                                    는 산소 운반 작용을 합니다.
+                                </p>
+
+                                <p>
+                                    3. 적혈구 속 붉은 색소 단백질은 
+                                    <select v-model="bloodUserBlanks.b4" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="헤모글로빈">헤모글로빈</option>
+                                        <option value="피브린">피브린</option>
+                                    </select>
+                                    입니다.
+                                </p>
+
+                                <p>
+                                    4. 체내에 세균이 침입했을 때 
+                                    <select v-model="bloodUserBlanks.b5" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="식균 작용">식균 작용</option>
+                                        <option value="혈액 응고">혈액 응고</option>
+                                    </select>
+                                    을 통해 신체를 보호하는 혈구는 
+                                    <select v-model="bloodUserBlanks.b6" class="border-2 border-amber-300 rounded-lg px-2 py-1 font-bold text-rose-700 bg-white focus:outline-none focus:border-rose-500">
+                                        <option value="">[ 선택 ]</option>
+                                        <option value="백혈구">백혈구</option>
+                                        <option value="혈소판">혈소판</option>
+                                    </select>
+                                    입니다.
+                                </p>
+
+                            </div>
+                        </div>
+
+                        <!-- Blood Blanks Feedback Result -->
+                        <div v-if="bloodBlanksChecked" class="mt-3 p-3 rounded-xl border text-xs flex items-center justify-between"
+                             :class="bloodBlanksScore === 100 ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'">
+                            <span class="font-bold">
+                                {{ bloodBlanksScore === 100 ? '🎉 완벽합니다! 빈칸 채우기 100점!' : `💡 정답을 다시 확인해보세요. (현재 점수: ${bloodBlanksScore}점)` }}
+                            </span>
+                            <span class="font-black text-sm">{{ bloodBlanksScore }}점</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================= TAB 2: 심장 복습 (HEART) ================= -->
+            <section v-if="activeTab === 'heart'" class="space-y-4">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <div class="flex items-center justify-between mb-2 border-b pb-2">
+                        <div>
+                            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                <span class="bg-red-100 text-red-600 p-1.5 rounded-lg text-xs">핵심 활동</span>
+                                🫀 심장 구조, 연결 혈관 및 판막 명칭 매칭 (10개 위치 정복)
+                            </h2>
+                            <p class="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+                                💡 관찰자 시점이므로 **그림의 왼쪽이 우심방/우심실**, **오른쪽이 좌심방/좌심실**입니다.
+                            </p>
+                        </div>
+                        <button @click="resetHeartLabels" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold shrink-0">
+                            <i class="fa-solid fa-rotate-right mr-1"></i>초기화
+                        </button>
+                    </div>
+
+                    <!-- Label Card Palette (10 Structures) -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3 flex flex-wrap gap-2 justify-center items-center">
+                        <span class="text-xs font-black text-slate-600 mr-2">📌 명칭 카드 선택:</span>
+                        <div 
+                            v-for="lbl in heartLabelsList" 
+                            :key="lbl.id"
+                            v-show="!lbl.placed"
+                            @click="selectHeartLabel(lbl)"
+                            :class="[
+                                'px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black cursor-pointer shadow-sm border transition',
+                                selectedHeartLabelObj?.id === lbl.id 
+                                    ? 'bg-red-600 text-white ring-4 ring-red-200 scale-105' 
+                                    : 'bg-white text-slate-800 border-slate-300 hover:border-red-400'
+                            ]">
+                            {{ lbl.text }}
+                        </div>
+                        <span v-if="allHeartNodesPlaced" class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-check text-base"></i> 심장의 모든 구조, 혈관 및 판막 위치를 완벽하게 맞추셨습니다!
+                        </span>
+                    </div>
+
+                    <!-- Redesigned Clear Heart & 4 Main Vessels SVG Canvas with Adjusted Label Box Positions -->
+                    <div class="relative bg-slate-900 rounded-2xl p-4 flex justify-center items-center border-4 border-slate-800 shadow-2xl min-h-[560px] overflow-hidden">
+                        <svg class="w-full max-w-2xl h-[520px]" viewBox="0 0 600 520">
+                            <defs>
+                                <linearGradient id="artG" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f87171" /><stop offset="100%" stop-color="#dc2626" />
+                                </linearGradient>
+                                <linearGradient id="veinG" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#60a5fa" /><stop offset="100%" stop-color="#2563eb" />
+                                </linearGradient>
+                                <filter id="glow">
+                                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                                    <feMerge>
+                                        <feMergeNode in="coloredBlur"/>
+                                        <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                </filter>
+                            </defs>
+
+                            <!-- ================= 4 MAIN BLOOD VESSELS (EXPLICIT PIPES & FLOW ARROWS) ================= -->
+
+                            <!-- 1. 대정맥 (Vena Cava): Blue Pipe entering 우심방 from Body/Top-Left -->
+                            <g :class="{ 'animate-sparkle': activeHighlightedNode === 'node1' }">
+                                <path d="M 120,80 L 120,200 L 180,200" fill="none" stroke="url(#veinG)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+                                <polygon points="180,190 195,200 180,210" fill="#60a5fa" filter="url(#glow)" />
+                            </g>
+                            <!-- Description text for Vessel 1 -->
+                            <text x="110" y="145" fill="#93c5fd" text-anchor="middle" font-size="11" font-weight="900">온몸에서 들어옴 (CO₂↑)</text>
+
+                            <!-- 2. 폐동맥 (Pulmonary Artery): Blue Pipe exiting 우심실 -> heading to Lungs -->
+                            <g :class="{ 'animate-sparkle': activeHighlightedNode === 'node2' }">
+                                <path d="M 230,320 C 230,220 220,130 270,48" fill="none" stroke="url(#veinG)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
+                                <polygon points="262,56 272,42 278,58" fill="#60a5fa" filter="url(#glow)" />
+                            </g>
+                            <!-- Description text for Vessel 2 -->
+                            <text x="230" y="80" fill="#93c5fd" text-anchor="middle" font-size="11" font-weight="900">허파로 나감 (CO₂↑)</text>
+
+                            <!-- 3. 대동맥 (Aorta): Red Arch exiting 좌심실 -> heading to Body -->
+                            <g :class="{ 'animate-sparkle': activeHighlightedNode === 'node3' }">
+                                <path d="M 370,320 C 370,180 340,70 480,90 L 480,470" fill="none" stroke="url(#artG)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />
+                                <polygon points="470,455 480,470 490,455" fill="#f87171" filter="url(#glow)" />
+                            </g>
+                            <!-- Description text for Vessel 3 -->
+                            <text x="495" y="210" fill="#fca5a5" text-anchor="middle" font-size="11" font-weight="900">온몸으로 나감 (산소↑)</text>
+
+                            <!-- 4. 폐정맥 (Pulmonary Vein): Red Pipe entering 좌심방 from Lungs -->
+                            <g :class="{ 'animate-sparkle': activeHighlightedNode === 'node4' }">
+                                <path d="M 460,48 L 430,200 L 390,200" fill="none" stroke="url(#artG)" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" />
+                                <polygon points="400,190 385,200 400,210" fill="#f87171" filter="url(#glow)" />
+                            </g>
+                            <!-- Description text for Vessel 4 -->
+                            <text x="440" y="80" fill="#fca5a5" text-anchor="middle" font-size="11" font-weight="900">허파에서 들어옴 (산소↑)</text>
+
+
+                            <!-- ================= MAIN HEART CHAMBER BODY ================= -->
+                            <!-- Heart Muscle Wall background outline -->
+                            <path d="M 300,440 C 120,350 90,200 200,160 C 260,140 300,185 300,185 C 300,185 340,140 400,160 C 510,200 480,350 300,440 Z" 
+                                  fill="#dc2626" opacity="0.85" stroke="#991b1b" stroke-width="6" class="animate-heartbeat" />
+
+                            <!-- Internal Chambers Visualization Boundaries -->
+                            <!-- 우심방 (Right Atrium Box) -->
+                            <rect x="170" y="175" width="100" height="85" rx="14" fill="#1e3a8a" opacity="0.8" stroke="#3b82f6" stroke-width="3" :class="{ 'animate-sparkle': activeHighlightedNode === 'node5' }" />
+                            <!-- 우심실 (Right Ventricle Box) -->
+                            <rect x="170" y="285" width="100" height="110" rx="14" fill="#1e3a8a" opacity="0.8" stroke="#3b82f6" stroke-width="3" :class="{ 'animate-sparkle': activeHighlightedNode === 'node6' }" />
+
+                            <!-- 좌심방 (Left Atrium Box) -->
+                            <rect x="330" y="175" width="100" height="85" rx="14" fill="#881337" opacity="0.8" stroke="#f43f5e" stroke-width="3" :class="{ 'animate-sparkle': activeHighlightedNode === 'node7' }" />
+                            <!-- 좌심실 (Left Ventricle Box - Extra Thick Muscle Layer) -->
+                            <rect x="330" y="285" width="100" height="110" rx="14" fill="#881337" opacity="0.8" stroke="#f43f5e" stroke-width="6" :class="{ 'animate-sparkle': activeHighlightedNode === 'node8' }" />
+
+                            <!-- Central Septum Wall (중격) -->
+                            <line x1="300" y1="160" x2="300" y2="435" stroke="#7f1d1d" stroke-width="12" stroke-linecap="round" />
+
+                            <!-- Valves (판막): Prevent Backflow -->
+                            <!-- Right Valve (우심방-우심실) -->
+                            <g transform="translate(220, 272)" :class="{ 'animate-sparkle': activeHighlightedNode === 'node9' }">
+                                <line x1="-25" y1="0" x2="25" y2="0" stroke="#fef08a" stroke-width="5" />
+                                <polygon points="-10,0 0,-10 10,0" fill="#fef08a" />
+                            </g>
+
+                            <!-- Left Valve (좌심방-좌심실) -->
+                            <g transform="translate(380, 272)" :class="{ 'animate-sparkle': activeHighlightedNode === 'node10' }">
+                                <line x1="-25" y1="0" x2="25" y2="0" stroke="#fef08a" stroke-width="5" />
+                                <polygon points="-10,0 0,-10 10,0" fill="#fef08a" />
+                            </g>
+
+                        </svg>
+
+                        <!-- Overlay Drop Target Touch Badges (10 Precise Locations Adjusted next to/above/below description texts) -->
+
+                        <!-- Node 1: 대정맥 (Positioned directly ABOVE the '온몸에서 들어옴' text) -->
+                        <div @click="placeHeartLabelTarget('node1', '대정맥')" style="top: 18%; left: 18%;"
+                             class="absolute transform -translate-x-1/2 px-2.5 py-1.5 rounded-lg text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node1'] ? 'bg-emerald-600 text-white border-white scale-105' : 'bg-slate-900/95 text-yellow-300 border-yellow-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node1'] || '혈관 ① [터치]' }}
+                        </div>
+
+                        <!-- Node 2: 폐동맥 (Positioned directly BELOW the '허파로 나감' text) -->
+                        <div @click="placeHeartLabelTarget('node2', '폐동맥')" style="top: 20%; left: 38%;"
+                             class="absolute transform -translate-x-1/2 px-2.5 py-1.5 rounded-lg text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node2'] ? 'bg-emerald-600 text-white border-white scale-105' : 'bg-slate-900/95 text-yellow-300 border-yellow-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node2'] || '혈관 ② [터치]' }}
+                        </div>
+
+                        <!-- Node 3: 대동맥 (Positioned directly ABOVE the '온몸으로 나감' text) -->
+                        <div @click="placeHeartLabelTarget('node3', '대동맥')" style="top: 32%; left: 82%;"
+                             class="absolute transform -translate-x-1/2 px-2.5 py-1.5 rounded-lg text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node3'] ? 'bg-emerald-600 text-white border-white scale-105' : 'bg-slate-900/95 text-yellow-300 border-yellow-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node3'] || '혈관 ③ [터치]' }}
+                        </div>
+
+                        <!-- Node 4: 폐정맥 (Positioned directly BELOW the '허파에서 들어옴' text) -->
+                        <div @click="placeHeartLabelTarget('node4', '폐정맥')" style="top: 20%; left: 73%;"
+                             class="absolute transform -translate-x-1/2 px-2.5 py-1.5 rounded-lg text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node4'] ? 'bg-emerald-600 text-white border-white scale-105' : 'bg-slate-900/95 text-yellow-300 border-yellow-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node4'] || '혈관 ④ [터치]' }}
+                        </div>
+
+                        <!-- Node 5: 우심방 (Right Atrium) -->
+                        <div @click="placeHeartLabelTarget('node5', '우심방')" style="top: 41%; left: 36%;"
+                             class="absolute transform -translate-x-1/2 px-3 py-1.5 rounded-xl text-xs font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node5'] ? 'bg-emerald-600 text-white border-white' : 'bg-blue-950 text-blue-200 border-blue-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node5'] || '심장방 ⑤ [터치]' }}
+                        </div>
+
+                        <!-- Node 6: 우심실 (Right Ventricle) -->
+                        <div @click="placeHeartLabelTarget('node6', '우심실')" style="top: 66%; left: 36%;"
+                             class="absolute transform -translate-x-1/2 px-3 py-1.5 rounded-xl text-xs font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node6'] ? 'bg-emerald-600 text-white border-white' : 'bg-blue-950 text-blue-200 border-blue-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node6'] || '심장실 ⑥ [터치]' }}
+                        </div>
+
+                        <!-- Node 7: 좌심방 (Left Atrium) -->
+                        <div @click="placeHeartLabelTarget('node7', '좌심방')" style="top: 41%; left: 63%;"
+                             class="absolute transform -translate-x-1/2 px-3 py-1.5 rounded-xl text-xs font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node7'] ? 'bg-emerald-600 text-white border-white' : 'bg-rose-950 text-rose-200 border-rose-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node7'] || '심장방 ⑦ [터치]' }}
+                        </div>
+
+                        <!-- Node 8: 좌심실 (Left Ventricle - Thick Wall) -->
+                        <div @click="placeHeartLabelTarget('node8', '좌심실')" style="top: 66%; left: 63%;"
+                             class="absolute transform -translate-x-1/2 px-3 py-1.5 rounded-xl text-xs font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap"
+                             :class="heartPlacedNodes['node8'] ? 'bg-emerald-600 text-white border-white' : 'bg-rose-950 text-rose-200 border-rose-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node8'] || '심장실 ⑧ [터치]' }}
+                        </div>
+
+                        <!-- Node 9: 판막 (우심방-우심실) -->
+                        <div @click="placeHeartLabelTarget('node9', '판막 (우심방-우심실)')" style="top: 52.5%; left: 36.7%;"
+                             class="absolute transform -translate-x-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap z-10"
+                             :class="heartPlacedNodes['node9'] ? 'bg-emerald-600 text-white border-white' : 'bg-slate-900/95 text-amber-300 border-amber-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node9'] || '구조 ⑨ [터치]' }}
+                        </div>
+
+                        <!-- Node 10: 판막 (좌심방-좌심실) -->
+                        <div @click="placeHeartLabelTarget('node10', '판막 (좌심방-좌심실)')" style="top: 52.5%; left: 63.3%;"
+                             class="absolute transform -translate-x-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] sm:text-[11px] font-black border-2 cursor-pointer transition shadow-lg whitespace-nowrap z-10"
+                             :class="heartPlacedNodes['node10'] ? 'bg-emerald-600 text-white border-white' : 'bg-slate-900/95 text-amber-300 border-amber-400 hover:scale-105'">
+                            {{ heartPlacedNodes['node10'] || '구조 ⑩ [터치]' }}
+                        </div>
+
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- ================= TAB 3: 혈관 복습 (VESSELS) ================= -->
+            <section v-if="activeTab === 'vessels'" class="space-y-4">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    
+                    <!-- Activity 1: Vessel Feature Sorting Drag & Drop -->
+                    <div class="lg:col-span-8 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-2 border-b pb-2">
+                            <h2 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                <span class="bg-sky-100 text-sky-700 p-1.5 rounded-lg text-xs">활동 1</span>
+                                🩺 3대 혈관(동맥·모세혈관·정맥) 특성 분류하기
+                            </h2>
+                            <button @click="resetVesselDrag" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold">
+                                <i class="fa-solid fa-rotate-right mr-1"></i>초기화
+                            </button>
+                        </div>
+
+                        <!-- Vessel Drag Card Pool -->
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-3">
+                            <p class="text-xs font-bold text-slate-600 mb-2">👇 아래 카드 특성을 알맞은 혈관 영역으로 끌어다 놓거나 터치하세요!</p>
+                            <div class="flex flex-wrap gap-2 min-h-[44px]">
+                                <div 
+                                    v-for="card in vesselCards" 
+                                    :key="card.id"
+                                    v-show="!card.placed"
+                                    @click="selectVesselCard(card)"
+                                    :class="[
+                                        'px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition shadow-sm border',
+                                        selectedVesselCardObj?.id === card.id 
+                                            ? 'bg-sky-600 text-white ring-4 ring-sky-300 scale-105' 
+                                            : 'bg-white text-slate-800 border-slate-300 hover:border-sky-400'
+                                    ]">
+                                    {{ card.text }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 Drop Bins: Artery / Capillary / Vein -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            
+                            <!-- 1. Artery (동맥) -->
+                            <div @click="placeVesselCardInBin('artery')"
+                                 class="bg-red-50/50 border-2 border-dashed border-red-300 p-3 rounded-xl min-h-[160px] flex flex-col justify-between cursor-pointer hover:bg-red-50">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-red-900">🔴 동맥 (Artery)</span>
+                                        <span class="text-[10px] bg-red-200 text-red-900 px-2 py-0.5 rounded font-black">심장에서 나감</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div v-for="cId in vesselBins.artery" :key="cId" class="bg-white border border-red-200 p-1.5 rounded-lg text-xs font-bold text-red-900 flex items-center justify-between shadow-sm">
+                                            <span>{{ getVesselCard(cId).text }}</span>
+                                            <button @click.stop="removeVesselCard(cId, 'artery')" class="text-red-400 hover:text-red-600 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span v-if="vesselBins.artery.length === 0" class="text-[11px] text-red-400 italic text-center">동맥 특성 카드를 놓으세요</span>
+                            </div>
+
+                            <!-- 2. Capillary (모세혈관) -->
+                            <div @click="placeVesselCardInBin('capillary')"
+                                 class="bg-purple-50/50 border-2 border-dashed border-purple-300 p-3 rounded-xl min-h-[160px] flex flex-col justify-between cursor-pointer hover:bg-purple-50">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-purple-900">🕸️ 모세혈관</span>
+                                        <span class="text-[10px] bg-purple-200 text-purple-900 px-2 py-0.5 rounded font-black">물질 교환</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div v-for="cId in vesselBins.capillary" :key="cId" class="bg-white border border-purple-200 p-1.5 rounded-lg text-xs font-bold text-purple-900 flex items-center justify-between shadow-sm">
+                                            <span>{{ getVesselCard(cId).text }}</span>
+                                            <button @click.stop="removeVesselCard(cId, 'capillary')" class="text-purple-400 hover:text-purple-600 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span v-if="vesselBins.capillary.length === 0" class="text-[11px] text-purple-400 italic text-center">모세혈관 특성 카드를 놓으세요</span>
+                            </div>
+
+                            <!-- 3. Vein (정맥) -->
+                            <div @click="placeVesselCardInBin('vein')"
+                                 class="bg-sky-50/50 border-2 border-dashed border-sky-300 p-3 rounded-xl min-h-[160px] flex flex-col justify-between cursor-pointer hover:bg-sky-50">
+                                <div>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-extrabold text-sm text-sky-900">🔵 정맥 (Vein)</span>
+                                        <span class="text-[10px] bg-sky-200 text-sky-900 px-2 py-0.5 rounded font-black">심장으로 들어옴</span>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div v-for="cId in vesselBins.vein" :key="cId" class="bg-white border border-sky-200 p-1.5 rounded-lg text-xs font-bold text-sky-900 flex items-center justify-between shadow-sm">
+                                            <span>{{ getVesselCard(cId).text }}</span>
+                                            <button @click.stop="removeVesselCard(cId, 'vein')" class="text-sky-400 hover:text-sky-600 ml-1"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <span v-if="vesselBins.vein.length === 0" class="text-[11px] text-sky-400 italic text-center">정맥 특성 카드를 놓으세요</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Activity 2: Vessel Comparative Graph Blanks -->
+                    <div class="lg:col-span-4 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2 border-b pb-2">
+                                <h2 class="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                    <span class="bg-amber-100 text-amber-700 p-1.5 rounded-lg text-xs">활동 2</span>
+                                    📊 시험 단골! 혈관 특성 크기 비교
+                                </h2>
+                                <button @click="checkVesselBlanks" class="text-xs bg-sky-600 hover:bg-sky-700 text-white px-3 py-1 rounded-lg font-bold transition">
+                                    확인
+                                </button>
+                            </div>
+
+                            <p class="text-xs text-slate-600 mb-3">부등호 방향과 가장 높은/느린 혈관을 고르세요!</p>
+
+                            <div class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs font-semibold">
+                                <div>
+                                    <span class="block text-slate-700 mb-1">1. 혈압 높은 순서:</span>
+                                    <div class="flex items-center gap-1">
+                                        <span>동맥</span>
+                                        <select v-model="vesselComparisons.p1" class="border rounded p-1 font-bold text-sky-800 bg-white">
+                                            <option value="">?</option><option value=">">&gt;</option><option value="<">&lt;</option>
+                                        </select>
+                                        <span>모세혈관</span>
+                                        <select v-model="vesselComparisons.p2" class="border rounded p-1 font-bold text-sky-800 bg-white">
+                                            <option value="">?</option><option value=">">&gt;</option><option value="<">&lt;</option>
+                                        </select>
+                                        <span>정맥</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <span class="block text-slate-700 mb-1">2. 혈류 속도가 가장 느린 혈관은?</span>
+                                    <select v-model="vesselComparisons.s1" class="w-full border rounded p-1.5 font-bold text-sky-800 bg-white">
+                                        <option value="">[ 선택하세요 ]</option>
+                                        <option value="동맥">동맥</option>
+                                        <option value="모세혈관">모세혈관</option>
+                                        <option value="정맥">정맥</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <span class="block text-slate-700 mb-1">3. 혈액의 역류를 막아주는 '판막'이 존재하는 곳은?</span>
+                                    <select v-model="vesselComparisons.v1" class="w-full border rounded p-1.5 font-bold text-sky-800 bg-white">
+                                        <option value="">[ 선택하세요 ]</option>
+                                        <option value="동맥">동맥</option>
+                                        <option value="모세혈관">모세혈관</option>
+                                        <option value="정맥">정맥</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vessel Score Feedback -->
+                        <div v-if="vesselChecked" class="mt-3 p-3 rounded-xl border text-xs flex items-center justify-between"
+                             :class="vesselScore === 100 ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-rose-50 border-rose-300 text-rose-900'">
+                            <span class="font-bold">
+                                {{ vesselScore === 100 ? '🎉 정답입니다! 혈관 비교 완벽 마스터!' : '💡 혈관 비교 문제 정답을 재확인하세요.' }}
+                            </span>
+                            <span class="font-black text-sm">{{ vesselScore }}점</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= TAB 4: 최종 성취도 & 복습 수료증 (FINAL) ================= -->
+            <section v-if="activeTab === 'final'" class="space-y-4">
+                
+                <div class="bg-white p-6 sm:p-8 rounded-3xl border-2 border-amber-300 shadow-lg text-center max-w-2xl mx-auto">
+                    <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center text-4xl mx-auto mb-3 shadow-inner">
+                        🏆
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-800">중2 순환계 개념 복습 완료!</h2>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">
+                        혈액, 심장, 혈관 3가지 복습 단원의 총 달성도를 확인하고 공식 개념 복습 수료증을 완성해보세요.
+                    </p>
+
+                    <!-- Score Dashboard Grid -->
+                    <div class="grid grid-cols-3 gap-3 my-6">
+                        <div class="bg-rose-50 p-3 rounded-2xl border border-rose-200">
+                            <span class="text-[11px] text-rose-700 font-extrabold block">혈액 복습</span>
+                            <span class="text-lg font-black text-rose-900">{{ getTabProgress('blood') }}%</span>
+                        </div>
+                        <div class="bg-red-50 p-3 rounded-2xl border border-red-200">
+                            <span class="text-[11px] text-red-700 font-extrabold block">심장 복습</span>
+                            <span class="text-lg font-black text-red-900">{{ getTabProgress('heart') }}%</span>
+                        </div>
+                        <div class="bg-sky-50 p-3 rounded-2xl border border-sky-200">
+                            <span class="text-[11px] text-sky-700 font-extrabold block">혈관 복습</span>
+                            <span class="text-lg font-black text-sky-900">{{ getTabProgress('vessels') }}%</span>
+                        </div>
+                    </div>
+
+                    <!-- Official Certificate -->
+                    <div class="bg-gradient-to-b from-amber-50 to-orange-50 border-4 border-amber-400 p-5 sm:p-6 rounded-2xl text-left shadow-md relative overflow-hidden">
+                        <div class="text-center border-b border-amber-200 pb-3 mb-3">
+                            <span class="bg-amber-200 text-amber-900 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">Concept Mastery Certificate</span>
+                            <h3 class="text-xl font-black text-amber-950 mt-1">순환계 과학 개념 복습 수료증</h3>
+                        </div>
+
+                        <div class="space-y-2 text-xs sm:text-sm text-amber-900">
+                            <div class="flex justify-between items-center bg-white/80 p-2 rounded-lg">
+                                <span class="font-bold">학생 이름:</span>
+                                <input v-model="studentName" placeholder="이름을 입력하세요" class="border border-amber-300 rounded px-2 py-1 text-xs font-bold text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
+                            <div class="flex justify-between items-center bg-white/80 p-2 rounded-lg">
+                                <span class="font-bold">최종 달성률:</span>
+                                <span class="font-black text-emerald-600 text-base">{{ Math.round(overallProgress) }}%</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white/80 p-2 rounded-lg">
+                                <span class="font-bold">발급 일자:</span>
+                                <span>{{ currentDate }}</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <p class="text-xs font-bold text-amber-900">위 학생은 중학교 2학년 과학 순환계 개념 복습 과정을 성실히 완료하였습니다.</p>
+                            <p class="text-xs text-amber-800 mt-1 font-black">지도교사: 과학 선생님 👩‍🔬</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-4 py-3 text-center text-slate-500 text-[11px] font-medium border-t border-slate-200">
+            🧪 중학교 2학년 과학 [동물과 에너지 - 순환계] 태블릿 대화형 개념 복습 앱
+        </footer>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    activeTab: 'blood',
+                    soundEnabled: true,
+                    studentName: '중2 과학 왕',
+
+                    activeHighlightedNode: null,
+                    highlightTimer: null,
+
+                    teacherTips: {
+                        blood: '원심분리 및 혈구 관찰 그림의 명칭을 맞추고, 핵심 특성 문장 카드를 올바른 성분 상자로 분류해보세요!',
+                        heart: '심장 도면 상의 10개 위치(혈관, 심장 방·실, 판막)에 올바른 명칭 카드를 선택 후 터치하여 매칭하세요!',
+                        vessels: '동맥, 모세혈관, 정맥 카드를 각각의 속성에 맞게 드래그하거나 터치하여 분류해 보세요!',
+                        final: '축하합니다! 순환계 모든 개념 복습 활동을 마무리했습니다.'
+                    },
+
+                    // Mobile/Tablet Tap-to-select helper states
+                    selectedMobileItem: null,
+                    selectedHeartLabelObj: null,
+                    selectedVesselCardObj: null,
+
+                    // TAB 1: Blood Observation Interactive Diagram Data
+                    bloodObsUser: {
+                        layerTop: '',
+                        layerMid: '',
+                        layerBot: '',
+                        cellA: '',
+                        cellB: '',
+                        cellC: ''
+                    },
+                    bloodObsChecked: false,
+                    bloodObsScore: 0,
+
+                    // TAB 1: Blood Drag Items & Bins
+                    bloodDragItems: [
+                        { id: 1, text: '산소 운반 작용', binKey: 'rbc', placed: false },
+                        { id: 2, text: '핵이 없음 (오목한 원반 모양)', binKey: 'rbc', placed: false },
+                        { id: 3, text: '식균 작용 (세균 침입 시 파괴)', binKey: 'wbc', placed: false },
+                        { id: 4, text: '혈구 중 크기가 가장 크고 핵이 있음', binKey: 'wbc', placed: false },
+                        { id: 5, text: '혈액 응고 & 딱지 형성', binKey: 'platelet', placed: false },
+                        { id: 6, text: '형태가 불규칙한 세포 조각', binKey: 'platelet', placed: false },
+                        { id: 7, text: '액체 성분 (물 약 90% 차지)', binKey: 'plasma', placed: false },
+                        { id: 8, text: '영양소 · 노폐물 · CO2 운반', binKey: 'plasma', placed: false }
+                    ],
+                    bloodBins: {
+                        rbc: { title: '적혈구', subtitle: '약 45%', hint: '산소 운반 전문', badgeClass: 'bg-red-100 text-red-800', items: [] },
+                        wbc: { title: '백혈구', subtitle: '크기가 가장 큼', hint: '식균 작용 담당', badgeClass: 'bg-indigo-100 text-indigo-800', items: [] },
+                        platelet: { title: '혈소판', subtitle: '가장 작음', hint: '출혈 시 혈액 응고', badgeClass: 'bg-purple-100 text-purple-800', items: [] },
+                        plasma: { title: '혈장', subtitle: '약 55%', hint: '노폐물/영양소 운반', badgeClass: 'bg-amber-100 text-amber-800', items: [] }
+                    },
+                    bloodUserBlanks: { b1: '', b2: '', b3: '', b4: '', b5: '', b6: '' },
+                    bloodBlanksChecked: false,
+                    bloodBlanksScore: 0,
+
+                    // TAB 2: Heart Data (10 Structures: 4 Chambers + 4 Connected Blood Vessels + 2 Valve locations)
+                    heartLabelsList: [
+                        { id: 'h1', text: '좌심방', placed: false },
+                        { id: 'h2', text: '좌심실', placed: false },
+                        { id: 'h3', text: '우심방', placed: false },
+                        { id: 'h4', text: '우심실', placed: false },
+                        { id: 'h5', text: '대동맥', placed: false },
+                        { id: 'h6', text: '대정맥', placed: false },
+                        { id: 'h7', text: '폐동맥', placed: false },
+                        { id: 'h8', text: '폐정맥', placed: false },
+                        { id: 'h9', text: '판막 (우심방-우심실)', placed: false },
+                        { id: 'h10', text: '판막 (좌심방-좌심실)', placed: false }
+                    ],
+                    heartPlacedNodes: {
+                        node1: '', node2: '', node3: '', node4: '',
+                        node5: '', node6: '', node7: '', node8: '',
+                        node9: '', node10: ''
+                    },
+                    heartConnUser: { v1: '', v2: '', v3: '', v4: '' },
+                    heartConnChecked: false,
+                    heartConnScore: 0,
+
+                    // TAB 3: Vessels Data
+                    vesselCards: [
+                        { id: 'v1', text: '혈압이 가장 높음', target: 'artery', placed: false },
+                        { id: 'v2', text: '혈관 벽이 가장 두꺼움', target: 'artery', placed: false },
+                        { id: 'v3', text: '한 층의 세포로 얇음', target: 'capillary', placed: false },
+                        { id: 'v4', text: '조직 세포와 물질 교환', target: 'capillary', placed: false },
+                        { id: 'v5', text: '총 단면적이 가장 넓음', target: 'capillary', placed: false },
+                        { id: 'v6', text: '혈압이 가장 낮음', target: 'vein', placed: false },
+                        { id: 'v7', text: '역류 방지 판막 존재', target: 'vein', placed: false }
+                    ],
+                    vesselBins: {
+                        artery: [],
+                        capillary: [],
+                        vein: []
+                    },
+                    vesselComparisons: { p1: '', p2: '', s1: '', v1: '' },
+                    vesselChecked: false,
+                    vesselScore: 0,
+
+                    tabs: [
+                        { id: 'blood', name: '🩸 1. 혈액 복습', icon: 'fa-solid fa-droplet' },
+                        { id: 'heart', name: '🫀 2. 심장 복습', icon: 'fa-solid fa-heart-pulse' },
+                        { id: 'vessels', name: '🩺 3. 혈관 복습', icon: 'fa-solid fa-stethoscope' },
+                        { id: 'final', name: '🏆 복습 성취도', icon: 'fa-solid fa-trophy' }
+                    ]
+                };
+            },
+
+            computed: {
+                allBloodItemsPlaced() {
+                    return this.bloodDragItems.every(i => i.placed);
+                },
+                allHeartNodesPlaced() {
+                    return Object.values(this.heartPlacedNodes).every(v => v !== '');
+                },
+                overallProgress() {
+                    const p1 = this.getTabProgress('blood');
+                    const p2 = this.getTabProgress('heart');
+                    const p3 = this.getTabProgress('vessels');
+                    return (p1 + p2 + p3) / 3;
+                },
+                currentDate() {
+                    const today = new Date();
+                    return `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+                }
+            },
+
+            methods: {
+                toggleSound() {
+                    this.soundEnabled = !this.soundEnabled;
+                },
+
+                playSound(type) {
+                    if (!this.soundEnabled) return;
+                    try {
+                        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+
+                        if (type === 'click') {
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(350, ctx.currentTime);
+                            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                            gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+                            osc.start();
+                            osc.stop(ctx.currentTime + 0.05);
+                        } else if (type === 'drop') {
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(500, ctx.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.08);
+                            gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                            gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+                            osc.start();
+                            osc.stop(ctx.currentTime + 0.08);
+                        } else if (type === 'correct') {
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(523, ctx.currentTime);
+                            osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+                            osc.frequency.setValueAtTime(783, ctx.currentTime + 0.2);
+                            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                            gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                            osc.start();
+                            osc.stop(ctx.currentTime + 0.35);
+                        }
+                    } catch (e) {}
+                },
+
+                // Blood Observation Check
+                checkBloodObs() {
+                    let score = 0;
+                    if (this.bloodObsUser.layerTop === '혈장') score += 16.6;
+                    if (this.bloodObsUser.layerMid === '백혈구와 혈소판') score += 16.6;
+                    if (this.bloodObsUser.layerBot === '적혈구') score += 16.6;
+                    if (this.bloodObsUser.cellA === '적혈구') score += 16.6;
+                    if (this.bloodObsUser.cellB === '백혈구') score += 16.6;
+                    if (this.bloodObsUser.cellC === '혈소판') score += 17.0;
+
+                    this.bloodObsScore = Math.round(score);
+                    this.bloodObsChecked = true;
+                    if (this.bloodObsScore === 100) this.playSound('correct');
+                    else this.playSound('click');
+                },
+
+                // Drag & Drop Handlers for Blood
+                onDragStart(evt, item) {
+                    evt.dataTransfer.setData('itemId', item.id);
+                    this.selectedMobileItem = item;
+                },
+
+                onDrop(evt, binKey) {
+                    const itemId = evt.dataTransfer.getData('itemId') || (this.selectedMobileItem ? this.selectedMobileItem.id : null);
+                    if (itemId) {
+                        this.placeItemInBin(parseInt(itemId), binKey);
+                    }
+                },
+
+                selectItemForMobile(item) {
+                    if (this.selectedMobileItem?.id === item.id) {
+                        this.selectedMobileItem = null;
+                    } else {
+                        this.selectedMobileItem = item;
+                        this.playSound('click');
+                    }
+                },
+
+                placeSelectedItemInBin(binKey) {
+                    if (this.selectedMobileItem) {
+                        this.placeItemInBin(this.selectedMobileItem.id, binKey);
+                    }
+                },
+
+                placeItemInBin(itemId, binKey) {
+                    const item = this.bloodDragItems.find(i => i.id === itemId);
+                    if (!item) return;
+
+                    if (item.binKey === binKey) {
+                        if (!this.bloodBins[binKey].items.includes(itemId)) {
+                            this.bloodBins[binKey].items.push(itemId);
+                            item.placed = true;
+                            this.playSound('drop');
+                        }
+                    } else {
+                        this.playSound('click');
+                    }
+                    this.selectedMobileItem = null;
+                },
+
+                removeItemFromBin(itemId, binKey) {
+                    const idx = this.bloodBins[binKey].items.indexOf(itemId);
+                    if (idx > -1) {
+                        this.bloodBins[binKey].items.splice(idx, 1);
+                        const item = this.bloodDragItems.find(i => i.id === itemId);
+                        if (item) item.placed = false;
+                        this.playSound('click');
+                    }
+                },
+
+                getBloodItem(id) {
+                    return this.bloodDragItems.find(i => i.id === id) || {};
+                },
+
+                isBinCorrect(binKey) {
+                    const bin = this.bloodBins[binKey];
+                    const targetCount = this.bloodDragItems.filter(i => i.binKey === binKey).length;
+                    return bin.items.length === targetCount;
+                },
+
+                resetBloodDrag() {
+                    this.bloodDragItems.forEach(i => i.placed = false);
+                    Object.keys(this.bloodBins).forEach(k => this.bloodBins[k].items = []);
+                    this.selectedMobileItem = null;
+                    this.playSound('click');
+                },
+
+                checkBloodBlanks() {
+                    let score = 0;
+                    if (this.bloodUserBlanks.b1 === '혈장') score += 16.6;
+                    if (this.bloodUserBlanks.b2 === '핵 없음') score += 16.6;
+                    if (this.bloodUserBlanks.b3 === '적혈구') score += 16.6;
+                    if (this.bloodUserBlanks.b4 === '헤모글로빈') score += 16.6;
+                    if (this.bloodUserBlanks.b5 === '식균 작용') score += 16.6;
+                    if (this.bloodUserBlanks.b6 === '백혈구') score += 17.0;
+
+                    this.bloodBlanksScore = Math.round(score);
+                    this.bloodBlanksChecked = true;
+                    if (this.bloodBlanksScore === 100) this.playSound('correct');
+                    else this.playSound('click');
+                },
+
+                selectHeartLabel(lbl) {
+                    if (this.selectedHeartLabelObj?.id === lbl.id) {
+                        this.selectedHeartLabelObj = null;
+                    } else {
+                        this.selectedHeartLabelObj = lbl;
+                        this.playSound('click');
+                    }
+                },
+
+                highlightNode(nodeId) {
+                    this.activeHighlightedNode = nodeId;
+                    if (this.highlightTimer) clearTimeout(this.highlightTimer);
+                    this.highlightTimer = setTimeout(() => {
+                        this.activeHighlightedNode = null;
+                    }, 3000);
+                },
+
+                placeHeartLabelTarget(nodeId, correctLabelText) {
+                    this.highlightNode(nodeId);
+                    if (this.selectedHeartLabelObj) {
+                        if (this.selectedHeartLabelObj.text === correctLabelText) {
+                            this.heartPlacedNodes[nodeId] = this.selectedHeartLabelObj.text;
+                            this.selectedHeartLabelObj.placed = true;
+                            this.selectedHeartLabelObj = null;
+                            this.playSound('drop');
+                        } else {
+                            this.playSound('click');
+                        }
+                    } else {
+                        this.playSound('click');
+                    }
+                },
+
+                resetHeartLabels() {
+                    this.heartLabelsList.forEach(l => l.placed = false);
+                    Object.keys(this.heartPlacedNodes).forEach(k => this.heartPlacedNodes[k] = '');
+                    this.selectedHeartLabelObj = null;
+                    this.playSound('click');
+                },
+
+                checkHeartConnections() {
+                    let count = 0;
+                    if (this.heartConnUser.v1 === '대정맥') count++;
+                    if (this.heartConnUser.v2 === '폐동맥') count++;
+                    if (this.heartConnUser.v3 === '폐정맥') count++;
+                    if (this.heartConnUser.v4 === '대동맥') count++;
+
+                    this.heartConnScore = Math.round((count / 4) * 100);
+                    this.heartConnChecked = true;
+                    if (this.heartConnScore === 100) this.playSound('correct');
+                    else this.playSound('click');
+                },
+
+                selectVesselCard(card) {
+                    if (this.selectedVesselCardObj?.id === card.id) {
+                        this.selectedVesselCardObj = null;
+                    } else {
+                        this.selectedVesselCardObj = card;
+                        this.playSound('click');
+                    }
+                },
+
+                placeVesselCardInBin(binKey) {
+                    if (this.selectedVesselCardObj) {
+                        if (this.selectedVesselCardObj.target === binKey) {
+                            this.vesselBins[binKey].push(this.selectedVesselCardObj.id);
+                            this.selectedVesselCardObj.placed = true;
+                            this.selectedVesselCardObj = null;
+                            this.playSound('drop');
+                        } else {
+                            this.playSound('click');
+                        }
+                    }
+                },
+
+                removeVesselCard(cardId, binKey) {
+                    const idx = this.vesselBins[binKey].indexOf(cardId);
+                    if (idx > -1) {
+                        this.vesselBins[binKey].splice(idx, 1);
+                        const card = this.vesselCards.find(c => c.id === cardId);
+                        if (card) card.placed = false;
+                        this.playSound('click');
+                    }
+                },
+
+                getVesselCard(id) {
+                    return this.vesselCards.find(c => c.id === id) || {};
+                },
+
+                resetVesselDrag() {
+                    this.vesselCards.forEach(c => c.placed = false);
+                    Object.keys(this.vesselBins).forEach(k => this.vesselBins[k] = []);
+                    this.selectedVesselCardObj = null;
+                    this.playSound('click');
+                },
+
+                checkVesselBlanks() {
+                    let correct = 0;
+                    if (this.vesselComparisons.p1 === '>') correct++;
+                    if (this.vesselComparisons.p2 === '>') correct++;
+                    if (this.vesselComparisons.s1 === '모세혈관') correct++;
+                    if (this.vesselComparisons.v1 === '정맥') correct++;
+
+                    this.vesselScore = Math.round((correct / 4) * 100);
+                    this.vesselChecked = true;
+                    if (this.vesselScore === 100) this.playSound('correct');
+                    else this.playSound('click');
+                },
+
+                getTabProgress(tabId) {
+                    if (tabId === 'blood') {
+                        const obsProg = (this.bloodObsScore / 100) * 30;
+                        const dragProg = (this.bloodDragItems.filter(i => i.placed).length / this.bloodDragItems.length) * 35;
+                        const blankProg = (this.bloodBlanksScore / 100) * 35;
+                        return Math.round(obsProg + dragProg + blankProg);
+                    }
+                    if (tabId === 'heart') {
+                        const placedCount = Object.values(this.heartPlacedNodes).filter(v => v !== '').length;
+                        return Math.round((placedCount / 10) * 100);
+                    }
+                    if (tabId === 'vessels') {
+                        const cardProg = (this.vesselCards.filter(c => c.placed).length / this.vesselCards.length) * 50;
+                        const blankProg = (this.vesselScore / 100) * 50;
+                        return Math.round(cardProg + blankProg);
+                    }
+                    return 100;
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
